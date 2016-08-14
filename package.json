@@ -1,0 +1,32 @@
+{
+  "name": "stanok",
+  "version": "1.0.0",
+  "manifestUrl": "http://tools.samsonpost.ru/stanok/package.json",
+  "packages": {
+    "win": {
+      "url": "http://tools.samsonpost.ru/stanok/dist/win/stanok.zip"
+    }
+  },
+  "main": "app/index.html",
+  "window": {
+    "icon": "favicon.ico",
+    "show": false,
+    "position": "center",
+    "width": 1000,
+    "height": 700
+  },
+  "dependencies": {
+    "chokidar": "^1.2.0",
+    "es6-promise": "^3.0.2",
+    "fs-extra": "^0.26.2",
+    "gift": "^0.8.0",
+    "imagemin": "^3.2.2",
+    "imagemin-newer": "^1.0.1",
+    "imagemin-pngquant": "^4.2.0",
+    "intcss": "git://github.com/verstak-int/intcss.git",
+    "livereload2": "^1.0.1",
+    "nw-updater": "git://github.com/verstak-int/nw-updater.git",
+    "postcss": "^5.0.11",
+    "run-sequence": "~1.1.2"
+  }
+}

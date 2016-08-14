@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Станок</title>
+	<link rel="stylesheet" href="main.css">
+</head>
+
+<body class="Page">
+
+	<div class="ProjectsChooser">
+		<span class="ProjectsChooser__path" id="projectsPathInfo">Укажите папку с проектами:</span>
+		<input class="ProjectsChooser__field" id="projectsPathInput" type="file" nwdirectory>
+		<button class="ProjectsChooser__refresh">Обновить список проектов</button>
+	</div>
+
+	<div class="Page__wrapper">
+		<div class="Projects"></div>
+		<pre id="log" class="Page__log"></pre>
+	</div>
+
+	<script src="winstate.js"></script>
+	<script src="main.js"></script>
+
+</body>
+</html>
