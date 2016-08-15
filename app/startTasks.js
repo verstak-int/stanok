@@ -70,85 +70,113 @@ function startTasks(project) {
 
 	// обработать файл стилей
 	var processCss = function (cb) {
-		console._log('kek');
-		var source = fs.readFileSync(path.normalize(project.root + project.style +'/src/_main.css'));
 
 		// чистим папку с отрисованными свг,
 		// они будут генерироваться заново
 		fs.removeSync(path.normalize(project.root + project.img +'/svg_fallback/**/*'));
 
-		postcss([
-			window.require('intcss')({
-				'import': {
-					from: path.normalize(project.root + project.style +'/src/_main.css'),
-					path: [
-						path.normalize(project.root + project.style +'/src/'),
-						'../lib/styles/postcss/'
-					]
-				},
-				'assets': {
-					loadPaths: [
-						path.normalize(project.root + project.img +'/dest')
-					]
-				},
-				'svg': {
-					paths: [
-						path.normalize(project.root + project.img +'/dest')
-					]
-				},
-				'url': {
-					basePath: process.cwd()
-				},
-				'svg-fallback': {
-					dest: path.normalize(project.root + project.img +'/svg_fallback/')
-				},
-				'autoprefixer': {
-					browsers: project.browsers
-				},
-				'data-packer': {
-					dest: {
-						path: function (opts) {
-							return path.join(path.dirname(opts.to), path.basename(opts.to, '.css') + '_data.css');
-						},
-						map: {
-							inline: false,
-							annotation: function (dataOpts, opts) {
-								return path.join(path.dirname(opts.map.annotation), path.basename(dataOpts.to) +'.map');
+		// получаем файлы стилей для начала работы
+		var styles = fs.readdirSync(path.normalize(project.root + project.style +'/src/')).map(function (style) {
+			if (style.match(/^_main.*\.css$/)) { return style; };
+			return null;
+		}).filter(function (style) {
+			if (style !== null) { return true; };
+			return false;
+		});
+
+		// если стили найдены
+		if (styles.length) {
+			styles.forEach(process);
+		}
+		else {
+			addLog('Не найдены файлы стилей для обработки', 'warn');
+		};
+
+		// обработка файла
+		function process (style) {
+			var stylePath = path.normalize(project.root + project.style +'/src/'+ style);
+			var stylePure = style.replace(/^_/, '');
+
+			// получаем исходники
+			var source = fs.readFileSync(stylePath);
+
+			// настраиваем обработчики
+			postcss([
+
+				// используется общий обработчик
+				// не всем нужна настройка
+				window.require('intcss')({
+					'import': {
+						from: stylePath,
+						path: [
+							path.dirname(stylePath),
+							'../lib/styles/postcss/'
+						]
+					},
+					'assets': {
+						loadPaths: [
+							path.normalize(project.root + project.img +'/dest')
+						]
+					},
+					'svg': {
+						paths: [
+							path.normalize(project.root + project.img +'/dest')
+						]
+					},
+					'url': {
+						basePath: window._.cWD
+					},
+					'svg-fallback': {
+						dest: path.normalize(project.root + project.img +'/svg_fallback/')
+					},
+					'autoprefixer': {
+						browsers: project.browsers
+					},
+					'data-packer': {
+						dest: {
+							path: function (opts) {
+								return path.join(path.dirname(opts.to), path.basename(opts.to, '.css') + '_data.css');
+							},
+							map: {
+								inline: false,
+								annotation: function (dataOpts, opts) {
+									return path.join(path.dirname(opts.map.annotation), path.basename(dataOpts.to) +'.map');
+								}
 							}
 						}
 					}
+				})
+			])
+			.process(source, {
+				from: stylePath,
+				to: path.normalize(project.root + project.style +'/'+ stylePure),
+				map: {
+					inline: false,
+					annotation: 'maps/'+ stylePure +'.map'
 				}
 			})
-		])
-		.process(source, {
-			from: path.normalize(project.root + project.style +'/src/_main.css').replace(/\\/g, '/'),
-			to: path.normalize(project.root + project.style + '/main.css').replace(/\\/g, '/'),
-			map: {
-				inline: false,
-				annotation: 'maps/main.css.map'
-			}
-		})
-		.then(function (result) {
-			result.warnings().forEach(function (message) {
-				addLog(message.toString(), 'warn');
+			.then(function (result) {
+				result.warnings().forEach(function (message) {
+					addLog(message.toString(), 'warn');
+				});
+
+				fs.writeFileSync(result.opts.to, result.css);
+
+				if ( result.map ) {
+					fs.writeFileSync(path.join(path.dirname(result.opts.to), result.opts.map.annotation), result.map);
+				};
+
+				window._.server.reloadFile(result.opts.to);
+				window._.server.reloadFile(path.join(path.dirname(result.opts.to), path.basename(result.opts.to, '.css') + '_data.css'));
+
+				addLog('Файлы стилей обработаны');
+				if (cb) {
+					cb();
+				};
+			}).catch(function (error) {
+				addLog(error.message, 'error', error.stack);
 			});
-
-			fs.writeFileSync(result.opts.to, result.css);
-
-			if ( result.map ) {
-				fs.writeFileSync(path.join(path.dirname(result.opts.to), result.opts.map.annotation), result.map);
-			};
-
-			window._.server.reloadFile(result.opts.to);
-			window._.server.reloadFile(path.join(path.dirname(result.opts.to), path.basename(result.opts.to, '.css') + '_data.css'));
-
-			addLog('Файлы стилей обработаны');
-			if (cb) {
-				cb();
-			};
-		}).catch(function (error) {
-			addLog(error.message, 'error', error.stack);
-		});
+		};
 	};
 	window._.currentProject.processor.css = processCss;
 

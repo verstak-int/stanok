@@ -5,7 +5,7 @@ var gui = require('nw.gui');
 
 var git = require('gift');
 
-var livereload = require('livereload2');
+var livereload = require('livereload');
 
 var writeProjects = require('./writeProjects');
 var getProjects = require('./getProjects');
