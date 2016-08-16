@@ -18,6 +18,7 @@ function startTasks(project) {
 	// меняем рабочую папку
 	// https://nodejs.org/api/process.html#process_process_chdir_directory
 	process.chdir(path.join(projectsPath, projectDir));
+	window._.cWD = process.cwd();
 
 	// настраиваем сборку проекта
 	var project = {};
