@@ -137,3 +137,39 @@
 .Project__switch:hover {
 	background-color: rgba(0,0,0,.1);
 }
+
+
+.differ--process .differ__start {
+	display: none;
+}
+
+.diff + .diff {
+	margin-top: 3em;
+}
+.diff__header {
+	margin-top: 0;
+}
+.diff__group {
+	display: table;
+}
+.diff__box {
+	display: table-cell;
+	vertical-align: top;
+	width: 33.33333%;
+}
+.diff__img {
+	width: 100%;
+	height: auto;
+	cursor: pointer;
+}
+
+.diff__trigger {
+	background-color: #fafaf0;
+	border: 1px solid #444;
+	display: inline-block;
+	padding: .3em .5em;
+	vertical-align: middle;
+}
+.diff__approve:checked ~ .diff__group .diff__trigger {
+	background-color: #aa7;
+}

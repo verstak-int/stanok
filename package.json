@@ -1,6 +1,6 @@
 {
   "name": "stanok",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "manifestUrl": "http://tools.samsonpost.ru/stanok/package.json",
   "packages": {
     "win": {
@@ -16,17 +16,18 @@
     "height": 700
   },
   "dependencies": {
-    "chokidar": "^1.2.0",
-    "es6-promise": "^3.0.2",
-    "fs-extra": "^0.26.2",
-    "gift": "^0.8.0",
+    "chokidar": "^1.6.1",
+    "differ": "git+https://github.com/verstak-int/differ.git",
+    "es6-promise": "^4.1.0",
+    "fs-extra": "^1.0.0",
+    "gift": "^0.10.0",
     "imagemin": "^3.2.2",
     "imagemin-newer": "^1.0.1",
     "imagemin-pngquant": "^4.2.0",
-    "intcss": "git://github.com/verstak-int/intcss.git",
+    "intcss": "git+https://github.com/verstak-int/intcss.git",
     "livereload": "git+https://github.com/verstak-int/node-livereload.git",
     "nw-updater": "git://github.com/verstak-int/nw-updater.git",
-    "postcss": "^5.0.11",
-    "run-sequence": "~1.1.2"
+    "postcss": "^5.2.16",
+    "run-sequence": "^1.2.2"
   }
 }

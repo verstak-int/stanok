@@ -54,7 +54,10 @@ function startTasks(project) {
 	project.style = project.verstak.path.style || 'css';
 	project.img = project.verstak.path.img || 'img';
 	project.layouts = project.verstak.path.layouts || '_layouts';
+	project.b = project.verstak.path.b || path.join('src', 'b');
 	project.html = project.verstak.path.html || '_html';
+
+	var bPath = path.normalize(path.join(project.root, project.layouts, 'src'));
 
 
 	var chokidar = window.require('chokidar');
@@ -111,7 +114,8 @@ function startTasks(project) {
 						from: stylePath,
 						path: [
 							path.dirname(stylePath),
-							'../lib/styles/postcss/'
+							'../lib/styles/postcss/',
+							bPath
 						]
 					},
 					'assets': {
@@ -131,7 +135,8 @@ function startTasks(project) {
 						dest: path.normalize(project.root + project.img +'/svg_fallback/')
 					},
 					'autoprefixer': {
-						browsers: project.browsers
+						browsers: project.browsers,
+						remove: false
 					},
 					'data-packer': {
 						dest: {
@@ -170,7 +175,8 @@ function startTasks(project) {
 				window._.server.reloadFile(result.opts.to);
 				window._.server.reloadFile(path.join(path.dirname(result.opts.to), path.basename(result.opts.to, '.css') + '_data.css'));
 
-				addLog('Файлы стилей обработаны');
+				addLog('Файл обработан: '+ stylePath);
+
 				if (cb) {
 					cb();
 				};
@@ -185,7 +191,9 @@ function startTasks(project) {
 
 	// наблюдатель за стилями
 	window._.currentProject.watcher.css = chokidar.watch([
-			path.normalize(project.root + project.style +'/src/**/*')
+			path.normalize(project.root + project.style +'/src/**/*'),
+			path.normalize(bPath +'/b/**/*.css'),
+			'../lib/styles/postcss/lib/**/*'
 		], {
 		ignored: '',
 		persistent: true,

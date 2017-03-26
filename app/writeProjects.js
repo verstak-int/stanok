@@ -143,12 +143,16 @@ function writeProject(project) {
 		+ 'Обработать '
 			+ '<button class="Project__build Project__build--styles">стили</button>, '
 			+ '<button class="Project__build Project__build--images">изображения</button>'
-		+ '</div>'
-		+ '<div class="ProjectDiff" hidden>'
+		+ '</div>';
+
+	if (project.data && project.data.path && project.data.path.reference) {
+		result+= '<div class="ProjectDiff">'
 			+ '<button class="ProjectDiff__trigger">Сравнить</button>'
 			+ '<div class="ProjectDiff__result"></div>'
-		+ '</div>'
-		+ '<div class="Project__log"></div>'
+		+ '</div>';
+	};
+
+	result += '<div class="Project__log"></div>'
 		+ '</div>';
 
 	return result;

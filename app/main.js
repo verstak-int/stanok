@@ -6,6 +6,7 @@ var gui = require('nw.gui');
 var git = require('gift');
 
 var livereload = require('livereload');
+var differ = require('differ');
 
 var writeProjects = require('./writeProjects');
 var getProjects = require('./getProjects');
@@ -267,5 +268,164 @@ document.addEventListener('click', function (e) {
 	else if (e.target.classList.contains('ProjectDiff__trigger')) {
 		var trigger = e.target;
 		var diffWrapper = trigger.closest('.ProjectDiff');
+		var project = diffWrapper.closest('.Project');
+		var group = project.closest('.Project__group');
+		var projectName = group.getAttribute('data-project-group-name');
+		var projectPath = group.querySelector('.Project__explorer').getAttribute('data-project-path');
+		var data = JSON.parse(project.querySelector('.Project__data').innerHTML);
+		var dataPath = data.path.data;
+		var pagesPath = path.join(projectPath, dataPath, 'src', 'pages');
+
+		// сделать словарь замен
+		// какие домены менять на int или some
+		var projectBase = projectName +'/'+ dataPath;
+		
+		if (projectBase.match(/(office|samsonopt|brabix|brauberg|ibt|kanzelaria|laima|sonnen|tiger-family)/)) {
+			projectBase = projectBase.replace(/^dev/, 'int');
+		}
+		else if (projectBase.match(/(samsonpost)/)) {
+			projectBase = projectBase.replace(/^dev/, 'some');
+		};
+
+		var pages = fs.readdirSync(pagesPath).map(function (page) {
+			var name = page.replace('.php', '');
+
+			return {
+				name: name,
+				url: 'http://'+ projectBase +'?p='+ name
+			};
+		});
+
+		var references = path.join(
+			projectPath,
+			data.path.data,
+			data.path.reference
+		);
+
+		document.querySelector('.ProjectDiff').classList.add('ProjectDiff--process');
+
+		var progress = document.createElement('progress');
+
+		progress.max = pages.length;
+		progress.value = 0;
+		document.querySelector('.ProjectDiff__result').appendChild(progress);
+
+		differ({
+
+			// что снимать
+			what: pages,
+
+			// куда положить и с чем сравнить
+			where: references,
+
+			// по готовности каждого снимка
+			each: function (item) {
+				console._log(item);
+				progress.value++;
+			},
+
+			// по готовности всей информации
+			cb: onDiffer
+		});
+		
+		function onDiffer (data, cfg) {
+			console._log(data);
+
+			var targetElem = document.querySelector('.ProjectDiff__result');
+
+			// добавляем шаблон блока сравнения
+			if (!document.querySelector('#diffTmpl')) {
+				targetElem.innerHTML += '\
+				<template id="diffTmpl">\
+					<div class="diff">\
+						<input class="diff__approve" type="checkbox">\
+						<h2 class="diff__header"></h2>\
+						<div class="diff__group">\
+							<div class="diff__box diff__box--tmp">\
+								<img class="diff__img">\
+								<label class="diff__trigger">Сделать эталоном</label>\
+							</div>\
+							<div class="diff__box diff__box--diff">\
+								<img class="diff__img">\
+							</div>\
+							<div class="diff__box diff__box--ethalon">\
+								<img class="diff__img">\
+							</div>\
+						</div>\
+					</div>\
+				</template>';
+			};
+
+			// строим блоки сравнения
+			data.forEach(function (diff, i) {
+				if (diff.type !== 'equal') {
+
+					var diffTmpl = document.querySelector('#diffTmpl').content;
+
+					if (diff.type !== 'added') {
+						diffTmpl.querySelector('.diff__header').innerHTML = diff.item.name +', '+ diff.type;
+						diffTmpl.querySelector('.diff__box--tmp img').src = 'file:///'+ diff.path.tmp.replace(/\\/g, '/');
+					};
+
+					diffTmpl.querySelector('.diff__approve').id = 'item'+ i;
+					diffTmpl.querySelector('.diff__trigger').setAttribute('for', 'item'+ i);
+
+					if (diff.type === 'change') {
+						diffTmpl.querySelector('.diff__box--diff img').src = 'file:///'+ diff.path.diff.replace(/\\/g, '/');
+					};
+
+					diffTmpl.querySelector('.diff__box--ethalon img').src = 'file:///'+ diff.path.ref.replace(/\\/g, '/');
+
+					var diffTmplClone = window.document.importNode(diffTmpl, true);
+
+					targetElem.appendChild(diffTmplClone);
+				};
+			});
+
+			// https://scotch.io/tutorials/creating-a-photo-discovery-app-with-nw-js-part-1
+			// https://nodejs.org/api/fs.html#fs_fs_renamesync_oldpath_newpath
+
+			// добавляем кнопку окончания сравнения
+			var finish = document.createElement('button');
+
+			finish.innerHTML = 'Закончить сравнение';
+			finish.onclick = function () {
+
+				[].forEach.call(document.querySelectorAll('.diff__approve'), function (approve) {
+					var isReference = approve.checked;
+					var item = data[approve.id.replace('item', '') * 1];
+
+					console._log(item);
+					fs.removeSync(item.path.tmp);
+				});
+
+				targetElem.innerHTML = '';
+				document.querySelector('.ProjectDiff').classList.remove('ProjectDiff--process');
+			};
+			targetElem.appendChild(finish);
+		};
+
+		// обработчик для изображений
+		document.addEventListener('click', function (e) {
+			if (e.target.closest('img')) {
+				var src = e.target.closest('img').src;
+
+				if (src) {
+					openItem(src);
+				};
+			};
+		});
+
+		// открытие в стандартной программе
+		function openItem (path) {
+			gui.Shell.openItem(path.replace(/\\/g, '/'));
+		};
+
+		// СДЕЛАТЬ
+		// удалять ненужные файлы
+		// fs.removeSync(path.join(
+		// 	process.cwd(),
+		// 	cfg.where
+		// ));
 	};
 });
