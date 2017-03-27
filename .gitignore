@@ -1,0 +1,12 @@
+/locales/
+/test/
+node_modules
+d3dcompiler_47.dll
+favicon.ico
+ffmpegsumo.dll
+icudtl.dat
+libEGL.dll
+libGLESv2.dll
+nw.pak
+nwjc.exe
+stanok.exe
