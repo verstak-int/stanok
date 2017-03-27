@@ -5,8 +5,25 @@ var addLog = window.require('./addLog');
 
 module.exports = startTasks;
 
+// вызов функций через интервал
+function debounce (func, wait, immediate) {
+	var timeout;
+	return function() {
+		var context = this, args = arguments;
+		var later = function() {
+			timeout = null;
+			if (!immediate) func.apply(context, args);
+		};
+		var callNow = immediate && !timeout;
+		clearTimeout(timeout);
+		timeout = setTimeout(later, wait);
+		if (callNow) func.apply(context, args);
+	};
+};
+
 // запуск задачи
-function startTasks(project) {
+function startTasks (project) {
+	var debounceDelay = 300;
 	
 	window._.currentProject = project;
 	window.document.querySelector('.Project[data-project-name="'+ window._.currentProject.name +'"]').classList.add('Project--is-active');
@@ -129,7 +146,14 @@ function startTasks(project) {
 						]
 					},
 					'url': {
-						basePath: window._.cWD
+						basePath: window._.cWD,
+						filter: function (url) {
+							if (url.match(/[\\\/]dest[\\\/]/)) {
+								return true;
+							};
+
+							return false;
+						}
 					},
 					'svg-fallback': {
 						dest: path.normalize(project.root + project.img +'/svg_fallback/')
@@ -189,6 +213,12 @@ function startTasks(project) {
 
 	window._.currentProject.watcher = {};
 
+	// реакция на изменения
+	var startCssProcess = debounce(function (event, path) {
+		addLog('Событие «'+ event +'» файла стилей: '+ path);
+		processCss();
+	}, debounceDelay);
+
 	// наблюдатель за стилями
 	window._.currentProject.watcher.css = chokidar.watch([
 			path.normalize(project.root + project.style +'/src/**/*'),
@@ -200,12 +230,6 @@ function startTasks(project) {
 		ignoreInitial: true
 	});
 	window._.currentProject.watcher.css.on('all', startCssProcess);
-
-	// реакция на изменения
-	function startCssProcess(event, path) {
-		addLog('Событие «'+ event +'» файла стилей: '+ path);
-		setTimeout(processCss, 100);
-	};
 
 
 	// обработать изображения
@@ -224,18 +248,8 @@ function startTasks(project) {
 	};
 	window._.currentProject.processor.img = processImg;
 
-	// наблюдатель за изображениями
-	window._.currentProject.watcher.img = chokidar.watch([
-			path.normalize(project.root + project.img +'/src/**/*')
-		], {
-		ignored: '',
-		persistent: true,
-		ignoreInitial: true
-	});
-	window._.currentProject.watcher.img.on('all', startImgProcess);
-
 	// реагируем на изменения изображений
-	function startImgProcess(event, filePath) {
+	var startImgProcess = debounce(function (event, filePath) {
 		addLog('Событие «'+ event +'» изображения: '+ filePath);
 
 		if (event === 'unlink') {
@@ -248,9 +262,19 @@ function startTasks(project) {
 			};
 		}
 		else {
-			setTimeout(imgProcess, 100);
+			imgProcess();
 		};
-	};
+	}, debounceDelay);
+
+	// наблюдатель за изображениями
+	window._.currentProject.watcher.img = chokidar.watch([
+			path.normalize(project.root + project.img +'/src/**/*')
+		], {
+		ignored: '',
+		persistent: true,
+		ignoreInitial: true
+	});
+	window._.currentProject.watcher.img.on('all', startImgProcess);
 
 	function imgProcess() {
 		processImg(function () {
@@ -270,15 +294,8 @@ function startTasks(project) {
 		watchLayoutPath.push(project.root + project.html +'/**/*.html');
 	};
 
-	window._.currentProject.watcher.layout = chokidar.watch(watchLayoutPath, {
-		ignored: '',
-		persistent: true,
-		ignoreInitial: true
-	});
-	window._.currentProject.watcher.layout.on('all', startHtmlProcess);
-
 	// реагируем на изменения разметки и скриптов
-	function startHtmlProcess(event, path) {
+	var startHtmlProcess = debounce(function (event, path) {
 		addLog('Событие «'+ event +'» файла разметки: '+ path);
 		if (path.match(/\.html$/g)) {
 			window._.server.reloadFile(path.replace(/\\/g, '/'));
@@ -286,5 +303,12 @@ function startTasks(project) {
 		else {
 			window._.server.reloadAll();
 		};
-	};
+	}, debounceDelay);
+
+	window._.currentProject.watcher.layout = chokidar.watch(watchLayoutPath, {
+		ignored: '',
+		persistent: true,
+		ignoreInitial: true
+	});
+	window._.currentProject.watcher.layout.on('all', startHtmlProcess);
 };
