@@ -99,68 +99,15 @@ window._.saveWindowState = (function(){
 		if (deltaHeight !== 'disabled' && typeof winState.deltaHeight !== 'undefined') {
 			deltaHeight = winState.deltaHeight
 			winState.height = winState.height - deltaHeight
-		};
-
-		// иногда окно задвигается за пределы экрана
-		// нормализация предотвращает это
-		normalizeWindowState();
+		}
 
 		win.resizeTo(winState.width, winState.height);
 		win.moveTo(winState.x, winState.y);
 	}
 
-	function normalizeWindowState () {
-		gui.Screen.Init();
-
-		var screens = gui.Screen.screens;
-		var x = {
-			min: 0
-		};
-		var y = {
-			min: 0
-		};
-		var triggered = false;
-
-		screens.forEach(function (screen) {
-			if (x.min > screen.work_area.x) {
-				x.min = screen.work_area.x;
-			};
-			if (x.max < screen.work_area.x + screen.work_area.width) {
-				x.max = screen.work_area.x + screen.work_area.width;
-			};
-			if (y.min > screen.work_area.y) {
-				y.min = screen.work_area.y;
-			};
-			if (y.max < screen.work_area.y + screen.work_area.height) {
-				y.max = screen.work_area.y + screen.work_area.height;
-			};
-		});
-
-		if (winState.x < x.min) {
-			winState.x = 0;
-			triggered = true;
-		};
-		if (x.max && winState.x > x.max) {
-			winState.x = x.max - winState.width;
-			triggered = true;
-		};
-		if (winState.y < y.min) {
-			winState.y = 0;
-			triggered = true;
-		};
-		if (y.max && winState.y > y.max) {
-			winState.y = y.max - winState.height;
-			triggered = true;
-		};
-
-		if (triggered) {
-			localStorage['windowState'] = JSON.stringify(winState);
-		};
-	}
-
 	function saveWindowState() {
 		dumpWindowState();
-		localStorage['windowState'] = JSON.stringify(winState);
+		   localStorage['windowState'] = JSON.stringify(winState);
 	}
 
 	initWindowState();
