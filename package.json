@@ -1,6 +1,6 @@
 {
   "name": "stanok",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "manifestUrl": "http://tools.samsonpost.ru/stanok/package.json",
   "packages": {
     "win": {
