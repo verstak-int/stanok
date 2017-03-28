@@ -148,7 +148,11 @@ function startTasks (project) {
 					'url': {
 						basePath: window._.cWD,
 						filter: function (url) {
-							if (url.match(/[\\\/]dest[\\\/]/)) {
+							if (
+								url.match(/[\\\/]dest[\\\/]/)
+								|| url.match(/[\\\/]lib[\\\/]styles[\\\/]/)
+								|| url.match(/[\\\/]src[\\\/]b[\\\/]/)
+							) {
 								return true;
 							};
 
