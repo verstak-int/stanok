@@ -29,8 +29,19 @@ function startTasks (project) {
 	window.document.querySelector('.Project[data-project-name="'+ window._.currentProject.name +'"]').classList.add('Project--is-active');
 	addLog('Начата сборка проекта '+ window._.currentProject.name);
 
-	var projectDir = window._.currentProject.name.split('/')[0];
 	var projectsPath = window.localStorage.projectsPath;
+	var projectNest = window._.currentProject.data.nest;
+	var projectDir = path.join(window._.currentProject.name.split('/')[0], projectNest);
+
+	var projectNestLevel = 0;
+	var pathToProjectsRoot = '';
+
+	if (projectNest) {
+		projectNestLevel = projectNest.split(/[\/\\]/).length;
+		for (var index = 0; index < projectNestLevel; index++) {
+			pathToProjectsRoot += '../';
+		};
+	};
 
 	// меняем рабочую папку
 	// https://nodejs.org/api/process.html#process_process_chdir_directory
@@ -131,7 +142,7 @@ function startTasks (project) {
 						from: stylePath,
 						path: [
 							path.dirname(stylePath),
-							'../lib/styles/postcss/',
+							pathToProjectsRoot +'../lib/styles/postcss/',
 							bPath
 						]
 					},
@@ -227,7 +238,7 @@ function startTasks (project) {
 	window._.currentProject.watcher.css = chokidar.watch([
 			path.normalize(project.root + project.style +'/src/**/*'),
 			path.normalize(bPath +'/b/**/*.css'),
-			'../lib/styles/postcss/lib/**/*'
+			pathToProjectsRoot + '../lib/styles/postcss/lib/**/*'
 		], {
 		ignored: '',
 		persistent: true,

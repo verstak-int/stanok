@@ -21,7 +21,7 @@ function getProjects(projectsPath, type) {
 			fs.readdirSync(path.join(projectsPath, item)).forEach(function (file) {
 				if (file === 'verstak.json' || file === 'polki.json') {
 					if (file === 'verstak.json') {
-						projects.verstak.push(getProjectData('verstak', item,projectsPath, file));
+						projects.verstak.push(getProjectData('verstak', item, projectsPath, file));
 					}
 					else if (file === 'polki.json') {
 						projects.polki.push(getProjectData('polki', item, projectsPath, file));
@@ -39,6 +39,7 @@ function getProjects(projectsPath, type) {
 	return projects;
 };
 
+// получаем данные проекта
 function getProjectData (type, item, projectsPath, file) {
 	if (type === 'git') {
 		return {
@@ -48,20 +49,33 @@ function getProjectData (type, item, projectsPath, file) {
 	};
 
 	var data = fs.readFileSync(path.join(projectsPath, item, file), 'utf8');
+	var nest = '';
 	var result;
 
 	data = JSON.parse(data);
+
+	if (data.nest) {
+		nest = data.nest;
+		data = fs.readFileSync(path.join(projectsPath, item, data.nest, file), 'utf8');
+		data = JSON.parse(data);
+	};
 
 	// если в проекте нет подпроектов
 	if (!Array.isArray(data)) {
 		if (!data.name) {
 			data.name = 'main';
 		};
-		result = {
+
+		data.nest = nest;
+
+		var project = normalizeProject({
 			name: item +'/'+ data.name,
+			pureName: item,
 			data: data,
 			type: type
-		};
+		});
+
+		result = project;
 	}
 
 	// если подпроекты есть
@@ -71,13 +85,70 @@ function getProjectData (type, item, projectsPath, file) {
 			if (!dataItem.name) {
 				dataItem.name = 'main';
 			};
-			result.push({
+
+			dataItem.nest = nest;
+
+			var project = normalizeProject({
 				name: item +'/'+ dataItem.name,
+				pureName: item,
 				data: dataItem,
 				type: type
-			})
+			});
+
+			result.push(project);
 		});
 	};
 
 	return result;
+};
+
+// подготавливаем информацию о проекте к дальнейшему использованию
+function normalizeProject (project) {
+		
+	// генерация правильной ссылки на проект
+	var prefix = 'int';
+	var root = 'assets';
+	var data = '_layouts';
+
+	if (project.data) {
+		if (!project.data.path) {
+			project.data.path = {
+				root: root,
+				data: data
+			};
+		};
+
+		if (!project.data.path.data) {
+			if (project.data.path.layouts) {
+				project.data.path.data = project.data.path.layouts;
+			}
+			else {
+				if (!project.data.path.root) {
+					project.data.path.root = root;
+				};
+				project.data.path.data = data;
+			};
+		};
+
+		if (project.data.path.root) {
+			project.data.path.data = project.data.path.root +'/'+ project.data.path.data;
+		};
+
+		project.data.path.data = project.data.path.data.replace(/\\/g, '/');
+	};
+
+	if (project.name.match(/samsonpost/)) {
+		prefix = 'some';
+	}
+	else if (project.name.match(/dev\.test/)) {
+		prefix = 'dev';
+	};
+
+	if (project.data) {
+		var link = project.name.replace('dev.', prefix +'.').split('/')[0] +'/'+ project.data.path.data;
+
+		project.link = 'http://'+ link.replace(/\/{2,}/g, '/');
+	};
+
+	return project;
 };

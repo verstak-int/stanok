@@ -67,51 +67,6 @@ function writeProjectsGroup (ps, type, projectsPath) {
 
 // отрисовываем проект
 function writeProject(project) {
-
-	// генерация правильной ссылки на проект
-	var prefix = 'int';
-	var root = 'assets/';
-
-	if (project.data) {
-		if (!project.data.path) {
-			project.data.path = {
-				'root': 'assets',
-				'data': '_layouts'
-			};
-		};
-
-		if (!project.data.path.data) {
-			if (project.data.path.layouts) {
-				project.data.path.data = project.data.path.layouts;
-			}
-			else {
-				if (!project.data.path.root) {
-					project.data.path.root = 'assets';
-				};
-				project.data.path.data = '_layouts';
-			};
-		};
-
-		if (project.data.path.root) {
-			project.data.path.data = project.data.path.root +'/'+ project.data.path.data;
-		};
-
-		project.data.path.data = project.data.path.data.replace(/\\/g, '/');
-	};
-
-	if (project.name.match(/samsonpost/)) {
-		prefix = 'some';
-	}
-	else if (project.name.match(/dev\.test/)) {
-		prefix = 'dev';
-	};
-
-	if (project.data) {
-		var link = project.name.replace('dev.', prefix +'.').split('/')[0] +'/'+ project.data.path.data +'?th=true';
-
-		link = 'http://'+ link.replace(/\/{2,}/g, '/');
-	};
-
 	var hide = 'hidden';
 
 	if (project.type === 'verstak') {
@@ -123,7 +78,7 @@ function writeProject(project) {
 	result += '<div class="Project" data-project-name="'+ project.name +'">';
 
 	if (project.data) {
-		result += '<a class="Project__name" href="'+ link +'" target="_blank">'
+		result += '<a class="Project__name" href="'+ project.link +'?th=true" target="_blank">'
 		+ project.name.replace(/^dev\./, '')
 		+ '</a>'
 		+ '<span class="Project__data" hidden>'
